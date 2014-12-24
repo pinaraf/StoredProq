@@ -52,7 +52,7 @@ public:
     {
         query->next();
         QSqlRecord rec = query->record();
-        Q_ASSERT(rec.count() == 1);
+        //Q_ASSERT(rec.count() == 1);
         return rec.value(0).toInt();
     }
 };
@@ -64,7 +64,7 @@ public:
     QList<int> map(QSqlQuery *query)
     {
         QList<int> result;
-        Q_ASSERT(query->record().count() == 1);
+        //Q_ASSERT(query->record().count() == 1);
         while (query->next())
         {
             result << query->value(0).toInt();

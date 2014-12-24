@@ -22,6 +22,7 @@ void _queryBind(QSqlQuery *query, int position, T value, Args... args)
     _queryBind(query, position + 1, args...);
 }
 
+//TODO: use variadic template here too to dynamically build the query string and cast
 inline QString _buildQuery(const QString &functionName, int parameterCount)
 {
     if (parameterCount == 0) {

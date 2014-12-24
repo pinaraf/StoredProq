@@ -21,22 +21,27 @@ int main(int argc, char *argv[])
     else
         qDebug() << "DB opened";
 
-    SqlSimpleMapper<Operation> mapper("list_all");
-    Operation *op = mapper();
+    Operation *op;
+
+    SqlBindingMapper<Operation> mapper("list_all");
+    op = mapper();
     qDebug() << op->description();
 
     SqlBindingMapper<Operation, int> mapper2("list_all");
     op = mapper2(1);
     qDebug() << op->bookingDate();
 
-    SqlSimpleMapper<QList<Operation*>> mapper3("list_all");
+    SqlBindingMapper<QList<Operation*>> mapper3("list_all");
     QList<Operation *>ops = mapper3();
     for (Operation *op: ops) {
         qDebug() << op->id();
     }
 
-    //SqlBindingMapper<int, int, int> mapper4("mymax");
-    //qDebug() << mapper4(42, 73);
+    SqlBindingMapper<int, int, int> mapper4("mymax");
+    qDebug() << mapper4(42, 73);
 
+    SqlBindingMapper<QList<int>, int, int> generateSeries("generate_series");
+    for (int i: generateSeries(1, 10))
+        qDebug() << i;
     return a.exec();
 }

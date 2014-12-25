@@ -10,6 +10,8 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
+    qDebug() << _buildPlaceholder<QString>(0);
+    qDebug() << _buildPlaceholders<QString, int, QString, int>(0, true);
 
     QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
     db.setHostName("localhost");

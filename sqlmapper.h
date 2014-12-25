@@ -21,7 +21,31 @@ void _queryBind(QSqlQuery *query, int position, T value, Args... args)
     query->bindValue(position, value);
     _queryBind(query, position + 1, args...);
 }
+/*
+template<typename T>
+inline QString _buildPlaceholder(int position)
+{
+    return QString(":param%1").arg(position);
+}
 
+template<>
+inline QString _buildPlaceholder<int> (int position)
+{
+    return QString(":param%1::integer").arg(position);
+}
+
+template<typename T, typename... Args>
+QString _buildPlaceholders(int position, bool recurse)
+{
+    qDebug() << "Building placeholders...";
+    if (sizeof...(Args) == 0)
+        return _buildPlaceholder<T>(position);
+    else
+        return _buildPlaceholder<T>(position) + ", " + _buildPlaceholders<Args...>(position + 1, true);
+}
+
+QString _buildPlaceholders(int, bool) { return ""; }
+*/
 //TODO: use variadic template here too to dynamically build the query string and cast
 inline QString _buildQuery(const QString &functionName, int parameterCount)
 {
@@ -39,6 +63,11 @@ inline QString _buildQuery(const QString &functionName, int parameterCount)
         qDebug() << QString("SELECT * FROM %1(%2);").arg(functionName).arg(placeHolders);
         return QString("SELECT * FROM %1(%2);").arg(functionName).arg(placeHolders);
     }
+}
+
+inline QString _buildQuery(const QString &functionName)
+{
+    return QString("SELECT * FROM %1();").arg(functionName);
 }
 
 template <typename T, typename... Arguments>
@@ -64,7 +93,7 @@ public:
     typename std::enable_if<(sizeof...(Arguments) == 0), R*>::type
     operator() () {
         QSqlQuery q;
-        q.prepare(_buildQuery(m_functionName, 0));
+        q.prepare(_buildQuery(m_functionName));
         q.exec();
 
         SqlQueryResultMapper<T> mapper;
@@ -99,7 +128,7 @@ public:
     typename std::enable_if<(sizeof...(Arguments) == 0), R>::type
     operator() () {
         QSqlQuery q;
-        q.prepare(_buildQuery(m_functionName, 0));
+        q.prepare(_buildQuery(m_functionName));
         q.exec();
 
         SqlQueryResultMapper<int> mapper;
@@ -133,7 +162,7 @@ public:
     typename std::enable_if<(sizeof...(Arguments) == 0), QList<R>>::type
     operator() () {
         QSqlQuery q;
-        q.prepare(_buildQuery(m_functionName, 0));
+        q.prepare(_buildQuery(m_functionName));
         q.exec();
 
         SqlQueryResultMapper<QList<int>> mapper;
@@ -167,7 +196,7 @@ public:
     typename std::enable_if<sizeof...(Arguments) == 0, QList<R *> >::type
     operator() () {
         QSqlQuery q;
-        q.prepare(_buildQuery(m_functionName, 0));
+        q.prepare(_buildQuery(m_functionName));
         q.exec();
 
         SqlQueryResultMapper<QList<T*>> mapper;

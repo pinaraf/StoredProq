@@ -4,8 +4,6 @@
 #include <QObject>
 #include <QSqlDatabase>
 #include <QSqlQuery>
-#include <QSqlRecord>
-#include <QMetaProperty>
 
 #include "queryresult.h"
 
@@ -18,7 +16,7 @@ void _queryBind(QSqlQuery *query, T value)
 template<typename T, typename... Args>
 void _queryBind(QSqlQuery *query, T value, Args... args)
 {
-    query->addBindValue(value);
+    _queryBind(query, value);
     _queryBind(query, args...);
 }
 

@@ -28,23 +28,12 @@ class SqlQueryResultMapper
 public:
     SqlQueryResultMapper() {
     }
-/*
-    T map(QSqlQuery *query)
-    {
-        // ...
-    }*/
-};
 
-template <typename T>
-class SqlQueryResultMapper<T*>
-{
-public:
-    SqlQueryResultMapper() {
-    }
-
-    T *map(QSqlQuery *query)
+    template <typename R = typename std::remove_pointer<T>::type>
+    typename std::enable_if<std::is_base_of<QObject, R>::value, R*>::type
+    map(QSqlQuery *query)
     {
-        T *result = new T();
+        T result = new R();
         query->next();
         QSqlRecord rec = query->record();
 
@@ -80,6 +69,16 @@ public:
             result << query->value(0).toDateTime();
         }
         return result;
+    }
+};
+
+template <>
+class SqlQueryResultMapper<void>
+{
+public:
+    void map(QSqlQuery *query)
+    {
+        query->next();
     }
 };
 

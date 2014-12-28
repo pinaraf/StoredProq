@@ -7,6 +7,8 @@
 #include <QSqlRecord>
 #include <QMetaProperty>
 
+#include <tuple>
+
 void mapRecordToQObject(const QSqlRecord &record, QObject *target)
 {
     const QMetaObject *metaObject = target->metaObject();
@@ -21,6 +23,22 @@ void mapRecordToQObject(const QSqlRecord &record, QObject *target)
         }
     }
 }
+
+template<typename T>
+inline std::tuple<T> mapRecordToTuple(const QSqlRecord &record, int position)
+{
+    return std::make_tuple<T>(record.value(position).value<T>());
+}
+
+template<typename T, typename... Args>
+inline
+typename std::enable_if<sizeof...(Args), std::tuple<T, Args...>>::type
+ mapRecordToTuple(const QSqlRecord &record, int position)
+{
+    return std::tuple_cat(std::make_tuple<T>(record.value(position).value<T>()), mapRecordToTuple<Args...>(record, position + 1));
+}
+
+
 
 template <typename T>
 class SqlQueryResultMapper
@@ -55,6 +73,34 @@ public:
     }
 };
 
+template <typename ...Args>
+class SqlQueryResultMapper<std::tuple<Args...>>
+{
+public:
+    std::tuple<Args...> map(QSqlQuery *query)
+    {
+        query->next();
+        QSqlRecord rec = query->record();
+        //Q_ASSERT(rec.count() == 1);
+        return mapRecordToTuple<Args...>(rec, 0);
+    }
+};
+
+template <typename ...Args>
+class SqlQueryResultMapper<QList<std::tuple<Args...>>>
+{
+public:
+    QList<std::tuple<Args...>> map(QSqlQuery *query)
+    {
+        QList<std::tuple<Args...>> result;
+        while (query->next())
+        {
+            QSqlRecord rec = query->record();
+            result << mapRecordToTuple<Args...>(rec, 0);
+        }
+        return result;
+    }
+};
 
 template <>
 class SqlQueryResultMapper<QList<QDateTime>>

@@ -9,7 +9,6 @@
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
     QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
     db.setHostName("localhost");
     db.setDatabaseName("test");
@@ -40,13 +39,19 @@ int main(int argc, char *argv[])
     SqlBindingMapper<int, int, int> mapper4("mymax");
     qDebug() << mapper4(42, 73);
 */
-    SqlBindingMapper<QList<int>, int, int> generateSeries("generate_series");
-    for (int i: generateSeries(1, 10))
-        qDebug() << i;
-    for (int i: generateSeries(2, 5))
-        qDebug() << i;
+    SqlBindingMapper<QList<std::tuple<int>>, int, int> generateSeries("generate_series");
+    for (auto i: generateSeries(1, 10))
+        qDebug() << std::get<0>(i);
+    for (auto i: generateSeries(2, 5))
+        qDebug() << std::get<0>(i);
     SqlBindingMapper<QDateTime> get_now("now");
     qDebug() << get_now();
 
-    return a.exec();
+    int x, y;
+    x = 42;
+    y = 73;
+    SqlBindingMapper<std::tuple<int, int>, int, int> swapper("swap");
+    qDebug() << "x = " << x << " ; y = " << y;
+    std::tuple<int, int> res = swapper(x, y);
+    qDebug() << "x = " << std::get<0>(res) << " ; y = " << std::get<1>(res);
 }

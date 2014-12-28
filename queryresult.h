@@ -27,10 +27,22 @@ class SqlQueryResultMapper
 {
 public:
     SqlQueryResultMapper() {
-        metaObject = T::staticMetaObject;
+    }
+/*
+    T map(QSqlQuery *query)
+    {
+        // ...
+    }*/
+};
+
+template <typename T>
+class SqlQueryResultMapper<T*>
+{
+public:
+    SqlQueryResultMapper() {
     }
 
-    T* map(QSqlQuery *query)
+    T *map(QSqlQuery *query)
     {
         T *result = new T();
         query->next();
@@ -39,9 +51,6 @@ public:
         mapRecordToQObject(rec, result);
         return result;
     }
-
-private:
-    QMetaObject metaObject;
 };
 
 template <>

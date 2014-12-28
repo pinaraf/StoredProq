@@ -92,7 +92,7 @@ public:
     ~SqlBindingMapper() {}
 
     template<typename R=T>
-    typename std::enable_if<(sizeof...(Arguments) != 0), R*>::type
+    typename std::enable_if<(sizeof...(Arguments) != 0), R>::type
     operator() (Arguments... params) {
         QSqlQuery *q = preparedQuery();
         if (!q)
@@ -104,7 +104,7 @@ public:
     }
 
     template<typename R=T>
-    typename std::enable_if<(sizeof...(Arguments) == 0), R*>::type
+    typename std::enable_if<(sizeof...(Arguments) == 0), R>::type
     operator() () {
         QSqlQuery *q = preparedQuery();
         if (!q)
@@ -119,146 +119,5 @@ private:
     SqlQueryResultMapper<T> m_mapper;
 };
 
-
-template <typename... Arguments>
-class SqlBindingMapper<int, Arguments...> : BaseMapper
-{
-public:
-    SqlBindingMapper(const QString &functionName) : BaseMapper(), m_functionName(functionName) {}
-    ~SqlBindingMapper() {}
-
-    template<typename R=int>
-    typename std::enable_if<(sizeof...(Arguments) != 0), R>::type
-    operator() (Arguments... params) {
-        QSqlQuery *q = preparedQuery();
-        if (!q)
-            q = setQuery(_buildQuery(m_functionName, params...));
-        _queryBind(q, params...);
-        q->exec();
-
-        return m_mapper.map(q);
-    }
-
-    template<typename R=int>
-    typename std::enable_if<(sizeof...(Arguments) == 0), R>::type
-    operator() () {
-        QSqlQuery *q = preparedQuery();
-        if (!q)
-            q = setQuery(_buildQuery(m_functionName));
-        q->exec();
-
-        return m_mapper.map(q);
-    }
-
-private:
-    QString m_functionName;
-    SqlQueryResultMapper<int> m_mapper;
-};
-
-template <typename... Arguments>
-class SqlBindingMapper<QDateTime, Arguments...> : BaseMapper
-{
-public:
-    SqlBindingMapper(const QString &functionName) : BaseMapper(), m_functionName(functionName) {}
-    ~SqlBindingMapper() {}
-
-    template<typename R=QDateTime>
-    typename std::enable_if<(sizeof...(Arguments) != 0), R>::type
-    operator() (Arguments... params) {
-        QSqlQuery *q = preparedQuery();
-        if (!q)
-            q = setQuery(_buildQuery(m_functionName, params...));
-        _queryBind(q, params...);
-        q->exec();
-
-        return m_mapper.map(q);
-    }
-
-    template<typename R=QDateTime>
-    typename std::enable_if<(sizeof...(Arguments) == 0), R>::type
-    operator() () {
-        QSqlQuery *q = preparedQuery();
-        if (!q)
-            q = setQuery(_buildQuery(m_functionName));
-        q->exec();
-
-        return m_mapper.map(q);
-    }
-
-private:
-    QString m_functionName;
-    SqlQueryResultMapper<QDateTime> m_mapper;
-};
-
-
-template <typename... Arguments>
-class SqlBindingMapper<QList<int>, Arguments...> : BaseMapper
-{
-public:
-    SqlBindingMapper(const QString &functionName) : BaseMapper(), m_functionName(functionName) {}
-    ~SqlBindingMapper() {}
-
-    template<typename R=int>
-    typename std::enable_if<(sizeof...(Arguments) != 0), QList<R>>::type
-    operator() (Arguments... params) {
-        QSqlQuery *q = preparedQuery();
-        if (!q)
-            q = setQuery(_buildQuery(m_functionName, params...));
-        _queryBind(q, params...);
-        q->exec();
-
-        return m_mapper.map(q);
-    }
-
-    template<typename R=int>
-    typename std::enable_if<(sizeof...(Arguments) == 0), QList<R>>::type
-    operator() () {
-      QSqlQuery *q = preparedQuery();
-      if (!q)
-          q = setQuery(_buildQuery(m_functionName));
-      q->exec();
-
-      return m_mapper.map(q);
-    }
-
-private:
-    QString m_functionName;
-    SqlQueryResultMapper<QList<int>> m_mapper;
-};
-
-template <typename T, typename... Arguments>
-class SqlBindingMapper<QList<T*>, Arguments...> : BaseMapper
-{
-public:
-    SqlBindingMapper(const QString &functionName) : BaseMapper(), m_functionName(functionName) {}
-    ~SqlBindingMapper() {}
-
-    template<typename R=T>
-    typename std::enable_if<sizeof...(Arguments) != 0, QList<R *> >::type
-    operator() (Arguments... params) {
-        QSqlQuery *q = preparedQuery();
-        if (!q)
-            q = setQuery(_buildQuery(m_functionName, params...));
-        _queryBind(q, params...);
-        q->exec();
-
-        return m_mapper.map(q);
-    }
-
-    template<typename R=T>
-    typename std::enable_if<sizeof...(Arguments) == 0, QList<R *> >::type
-    operator() () {
-        QSqlQuery *q = preparedQuery();
-        if (!q)
-            q = setQuery(_buildQuery(m_functionName));
-        q->exec();
-
-        return m_mapper.map(q);
-    }
-
-private:
-    QString m_functionName;
-    SqlQueryResultMapper<QList<T*>> m_mapper;
-};
 
 #endif // SQLMAPPER_H

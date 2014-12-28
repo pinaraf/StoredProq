@@ -4,8 +4,6 @@
 #include <QObject>
 #include <QDate>
 
-template <class T> QList<T> list_all();
-
 class Operation : public QObject
 {
     Q_OBJECT

@@ -45,6 +45,36 @@ private:
 };
 
 template <>
+class SqlQueryResultMapper<QDateTime>
+{
+public:
+    QDateTime map(QSqlQuery *query)
+    {
+        query->next();
+        QSqlRecord rec = query->record();
+        //Q_ASSERT(rec.count() == 1);
+        return rec.value(0).toDateTime();
+    }
+};
+
+
+template <>
+class SqlQueryResultMapper<QList<QDateTime>>
+{
+public:
+    QList<QDateTime> map(QSqlQuery *query)
+    {
+        QList<QDateTime> result;
+        //Q_ASSERT(query->record().count() == 1);
+        while (query->next())
+        {
+            result << query->value(0).toDateTime();
+        }
+        return result;
+    }
+};
+
+template <>
 class SqlQueryResultMapper<int>
 {
 public:

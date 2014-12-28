@@ -10,42 +10,42 @@
 #include "queryresult.h"
 
 template<typename T>
-void _queryBind(QSqlQuery *query, int position, T value)
+void _queryBind(QSqlQuery *query, T value)
 {
-    query->bindValue(position, value);
+    query->addBindValue(value);
 }
 
 template<typename T, typename... Args>
-void _queryBind(QSqlQuery *query, int position, T value, Args... args)
+void _queryBind(QSqlQuery *query, T value, Args... args)
 {
-    query->bindValue(position, value);
-    _queryBind(query, position + 1, args...);
+    query->addBindValue(value);
+    _queryBind(query, args...);
 }
 
 template<typename T>
-inline QString _buildPlaceholder(int position)
+inline QString _buildPlaceholder()
 {
-    return QString(":param%1").arg(position);
+    return QStringLiteral("?");
 }
 
 template<>
-inline QString _buildPlaceholder<int> (int position)
+inline QString _buildPlaceholder<int> ()
 {
-    return QString(":param%1::integer").arg(position);
+    return QStringLiteral("?::integer");
 }
 
 template<typename T>
-QString _buildPlaceholders(int position, T) {
-    return _buildPlaceholder<T>(position);
+QString _buildPlaceholders(T) {
+    return _buildPlaceholder<T>();
 }
 
 template<typename T, typename... Args>
-QString _buildPlaceholders(int position, T, Args... args)
+QString _buildPlaceholders(T, Args... args)
 {
     if (sizeof...(Args) == 0)
-        return _buildPlaceholder<T>(position);
+        return _buildPlaceholder<T>();
     else
-        return _buildPlaceholder<T>(position) + ", " + _buildPlaceholders<Args...>(position + 1, args...);
+        return _buildPlaceholder<T>() + ", " + _buildPlaceholders<Args...>(args...);
 }
 
 template<typename... Args>
@@ -54,7 +54,7 @@ inline QString _buildQuery(const QString &functionName, Args... args)
     if (sizeof...(Args) == 0) {
         return QString("SELECT * FROM %1();").arg(functionName);
     } else {
-        QString placeHolders = _buildPlaceholders(0, args...);
+        QString placeHolders = _buildPlaceholders(args...);
         qDebug() << QString("SELECT * FROM %1(%2);").arg(functionName).arg(placeHolders);
         return QString("SELECT * FROM %1(%2);").arg(functionName).arg(placeHolders);
     }
@@ -97,7 +97,7 @@ public:
         QSqlQuery *q = preparedQuery();
         if (!q)
             q = setQuery(_buildQuery(m_functionName, params...));
-        _queryBind(q, 0, params...);
+        _queryBind(q, params...);
         q->exec();
 
         return m_mapper.map(q);
@@ -133,7 +133,7 @@ public:
         QSqlQuery *q = preparedQuery();
         if (!q)
             q = setQuery(_buildQuery(m_functionName, params...));
-        _queryBind(q, 0, params...);
+        _queryBind(q, params...);
         q->exec();
 
         return m_mapper.map(q);
@@ -156,6 +156,42 @@ private:
 };
 
 template <typename... Arguments>
+class SqlBindingMapper<QDateTime, Arguments...> : BaseMapper
+{
+public:
+    SqlBindingMapper(const QString &functionName) : BaseMapper(), m_functionName(functionName) {}
+    ~SqlBindingMapper() {}
+
+    template<typename R=QDateTime>
+    typename std::enable_if<(sizeof...(Arguments) != 0), R>::type
+    operator() (Arguments... params) {
+        QSqlQuery *q = preparedQuery();
+        if (!q)
+            q = setQuery(_buildQuery(m_functionName, params...));
+        _queryBind(q, params...);
+        q->exec();
+
+        return m_mapper.map(q);
+    }
+
+    template<typename R=QDateTime>
+    typename std::enable_if<(sizeof...(Arguments) == 0), R>::type
+    operator() () {
+        QSqlQuery *q = preparedQuery();
+        if (!q)
+            q = setQuery(_buildQuery(m_functionName));
+        q->exec();
+
+        return m_mapper.map(q);
+    }
+
+private:
+    QString m_functionName;
+    SqlQueryResultMapper<QDateTime> m_mapper;
+};
+
+
+template <typename... Arguments>
 class SqlBindingMapper<QList<int>, Arguments...> : BaseMapper
 {
 public:
@@ -168,7 +204,7 @@ public:
         QSqlQuery *q = preparedQuery();
         if (!q)
             q = setQuery(_buildQuery(m_functionName, params...));
-        _queryBind(q, 0, params...);
+        _queryBind(q, params...);
         q->exec();
 
         return m_mapper.map(q);
@@ -203,7 +239,7 @@ public:
         QSqlQuery *q = preparedQuery();
         if (!q)
             q = setQuery(_buildQuery(m_functionName, params...));
-        _queryBind(q, 0, params...);
+        _queryBind(q, params...);
         q->exec();
 
         return m_mapper.map(q);

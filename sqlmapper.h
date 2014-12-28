@@ -8,13 +8,13 @@
 #include "queryresult.h"
 
 template<typename T>
-void _queryBind(QSqlQuery *query, T value)
+inline void _queryBind(QSqlQuery *query, T value)
 {
     query->addBindValue(value);
 }
 
 template<typename T, typename... Args>
-void _queryBind(QSqlQuery *query, T value, Args... args)
+inline void _queryBind(QSqlQuery *query, T value, Args... args)
 {
     _queryBind(query, value);
     _queryBind(query, args...);
@@ -33,12 +33,12 @@ inline QString _buildPlaceholder<int> ()
 }
 
 template<typename T>
-QString _buildPlaceholders(T) {
+inline QString _buildPlaceholders(T) {
     return _buildPlaceholder<T>();
 }
 
 template<typename T, typename... Args>
-QString _buildPlaceholders(T, Args... args)
+inline QString _buildPlaceholders(T, Args... args)
 {
     if (sizeof...(Args) == 0)
         return _buildPlaceholder<T>();

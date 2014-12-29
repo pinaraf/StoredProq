@@ -58,6 +58,21 @@ public:
     }
 };
 
+
+template <>
+class SqlQueryResultMapper<QJsonDocument>
+{
+public:
+    QJsonDocument map(QSqlQuery *query)
+    {
+        query->next();
+        QSqlRecord rec = query->record();
+        //Q_ASSERT(rec.count() == 1);
+        return QJsonDocument::fromJson(rec.value(0).toString().toUtf8());
+    }
+};
+
+
 template <>
 class SqlQueryResultMapper<QDateTime>
 {

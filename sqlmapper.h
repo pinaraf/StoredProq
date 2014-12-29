@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QSqlDatabase>
 #include <QSqlQuery>
+#include <QJsonDocument>
 
 #include "queryresult.h"
 
@@ -11,6 +12,12 @@ template<typename T>
 inline void _queryBind(QSqlQuery *query, const T &value)
 {
     query->addBindValue(value);
+}
+
+template <>
+inline void _queryBind(QSqlQuery *query, const QJsonDocument &value)
+{
+    query->addBindValue(QString::fromUtf8(value.toJson()));
 }
 
 template<typename T, typename... Args>

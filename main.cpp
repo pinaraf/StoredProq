@@ -54,4 +54,9 @@ int main(int argc, char *argv[])
     qDebug() << "x = " << x << " ; y = " << y;
     std::tuple<int, int> res = swapper(x, y);
     qDebug() << "x = " << std::get<0>(res) << " ; y = " << std::get<1>(res);
+
+
+    QJsonDocument doc = QJsonDocument::fromJson("{\"hello\": {\"world\": false, \"me\": true}}");
+    SqlBindingMapper<QJsonDocument, QJsonDocument, QString> json_extractor("test_json");
+    qDebug() << json_extractor(doc, "{hello}").toJson();
 }

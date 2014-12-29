@@ -8,7 +8,7 @@
 #include "queryresult.h"
 
 template<typename T>
-inline void _queryBind(QSqlQuery *query, T value)
+inline void _queryBind(QSqlQuery *query, const T &value)
 {
     query->addBindValue(value);
 }
@@ -33,26 +33,25 @@ inline QString _buildPlaceholder<int> ()
 }
 
 template<typename T>
-inline QString _buildPlaceholders(T) {
+inline QString _buildPlaceholders() {
     return _buildPlaceholder<T>();
 }
 
 template<typename T, typename... Args>
-inline QString _buildPlaceholders(T, Args... args)
+inline
+typename std::enable_if<sizeof...(Args), QString>::type
+_buildPlaceholders()
 {
-    if (sizeof...(Args) == 0)
-        return _buildPlaceholder<T>();
-    else
-        return _buildPlaceholder<T>() + ", " + _buildPlaceholders<Args...>(args...);
+    return _buildPlaceholder<T>() + ", " + _buildPlaceholders<Args...>();
 }
 
 template<typename... Args>
-inline QString _buildQuery(const QString &functionName, Args... args)
+inline QString _buildQuery(const QString &functionName, Args...)
 {
     if (sizeof...(Args) == 0) {
         return QString("SELECT * FROM %1();").arg(functionName);
     } else {
-        QString placeHolders = _buildPlaceholders(args...);
+        QString placeHolders = _buildPlaceholders<Args...>();
         qDebug() << QString("SELECT * FROM %1(%2);").arg(functionName).arg(placeHolders);
         return QString("SELECT * FROM %1(%2);").arg(functionName).arg(placeHolders);
     }

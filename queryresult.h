@@ -6,8 +6,21 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QMetaProperty>
+#include <QJsonDocument>
 
 #include <tuple>
+
+template <typename T>
+inline T mapRecordFieldToValue(const QSqlRecord &record, int field)
+{
+    return record.value(field).value<T>();
+}
+
+template <>
+inline QJsonDocument mapRecordFieldToValue(const QSqlRecord &record, int field)
+{
+    return QJsonDocument::fromJson(record.value(field).toString().toUtf8());
+}
 
 void mapRecordToQObject(const QSqlRecord &record, QObject *target)
 {
@@ -19,6 +32,7 @@ void mapRecordToQObject(const QSqlRecord &record, QObject *target)
         if (propIdx >= 0)
         {
             QMetaProperty prop = metaObject->property(propIdx);
+            // Hum, without real language level introspection, this is not possible to call mapRecordFieldToValue easily
             prop.write(target, record.value(i));
         }
     }
@@ -27,7 +41,7 @@ void mapRecordToQObject(const QSqlRecord &record, QObject *target)
 template<typename T>
 inline std::tuple<T> mapRecordToTuple(const QSqlRecord &record, int position)
 {
-    return std::make_tuple<T>(record.value(position).value<T>());
+    return std::make_tuple<T>(mapRecordFieldToValue<T>(record, position));
 }
 
 template<typename T, typename... Args>
@@ -35,7 +49,7 @@ inline
 typename std::enable_if<sizeof...(Args), std::tuple<T, Args...>>::type
  mapRecordToTuple(const QSqlRecord &record, int position)
 {
-    return std::tuple_cat(std::make_tuple<T>(record.value(position).value<T>()), mapRecordToTuple<Args...>(record, position + 1));
+    return std::tuple_cat(std::make_tuple<T>(mapRecordFieldToValue<T>(record, position)), mapRecordToTuple<Args...>(record, position + 1));
 }
 
 template <typename T>
@@ -56,33 +70,15 @@ public:
         mapRecordToQObject(rec, result);
         return result;
     }
-};
 
-
-template <>
-class SqlQueryResultMapper<QJsonDocument>
-{
-public:
-    QJsonDocument map(QSqlQuery *query)
+    template <typename R = typename std::remove_pointer<T>::type>
+    typename std::enable_if<!std::is_base_of<QObject, R>::value, R>::type
+    map(QSqlQuery *query)
     {
         query->next();
         QSqlRecord rec = query->record();
-        //Q_ASSERT(rec.count() == 1);
-        return QJsonDocument::fromJson(rec.value(0).toString().toUtf8());
-    }
-};
 
-
-template <>
-class SqlQueryResultMapper<QDateTime>
-{
-public:
-    QDateTime map(QSqlQuery *query)
-    {
-        query->next();
-        QSqlRecord rec = query->record();
-        //Q_ASSERT(rec.count() == 1);
-        return rec.value(0).toDateTime();
+        return mapRecordFieldToValue<R>(rec, 0);
     }
 };
 
@@ -138,19 +134,6 @@ public:
     void map(QSqlQuery *query)
     {
         query->next();
-    }
-};
-
-template <>
-class SqlQueryResultMapper<int>
-{
-public:
-    int map(QSqlQuery *query)
-    {
-        query->next();
-        QSqlRecord rec = query->record();
-        //Q_ASSERT(rec.count() == 1);
-        return rec.value(0).toInt();
     }
 };
 

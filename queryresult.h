@@ -38,8 +38,6 @@ typename std::enable_if<sizeof...(Args), std::tuple<T, Args...>>::type
     return std::tuple_cat(std::make_tuple<T>(record.value(position).value<T>()), mapRecordToTuple<Args...>(record, position + 1));
 }
 
-
-
 template <typename T>
 class SqlQueryResultMapper
 {

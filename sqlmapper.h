@@ -5,6 +5,7 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QJsonDocument>
+#include <tuple>
 
 #include "queryresult.h"
 
@@ -19,7 +20,13 @@ inline void _queryBind(QSqlQuery *query, const QJsonDocument &value)
 {
     query->addBindValue(QString::fromUtf8(value.toJson()));
 }
-
+/*
+template <>
+inline void _queryBind(QSqlQuery *query, const std::tuple &value)
+{
+    query->addBindValue(QString::fromUtf8(value.toJson()));
+}
+*/
 template<typename T, typename... Args>
 inline void _queryBind(QSqlQuery *query, T value, Args... args)
 {
@@ -69,58 +76,39 @@ inline QString _buildQuery(const QString &functionName)
     return QString("SELECT * FROM %1();").arg(functionName);
 }
 
-
-class BaseMapper
-{
-public:
-    BaseMapper() : m_preparedQuery(nullptr) {}
-    ~BaseMapper() { if (m_preparedQuery) delete(m_preparedQuery); }
-
-    QSqlQuery *preparedQuery() const { return m_preparedQuery; }
-    QSqlQuery *setQuery(const QString &query) {
-        if (m_preparedQuery)
-            delete(m_preparedQuery);
-        m_preparedQuery = new QSqlQuery();
-        m_preparedQuery->prepare(query);
-        return m_preparedQuery;
-    }
-private:
-    QSqlQuery *m_preparedQuery;
-};
-
 template <typename T, typename... Arguments>
-class SqlBindingMapper : BaseMapper
+class SqlBindingMapper
 {
 public:
-    SqlBindingMapper(const QString &functionName) : BaseMapper(), m_functionName(functionName) {}
-    ~SqlBindingMapper() {}
+    SqlBindingMapper(const QString &functionName) : m_functionName(functionName) {}
+    ~SqlBindingMapper() { }
 
     template<typename R=T>
     typename std::enable_if<(sizeof...(Arguments) != 0), R>::type
     operator() (Arguments... params) {
-        QSqlQuery *q = preparedQuery();
-        if (!q)
-            q = setQuery(_buildQuery(m_functionName, params...));
-        _queryBind(q, params...);
-        q->exec();
+        if (!m_preparedQuery.isValid())
+            m_preparedQuery.prepare(_buildQuery(m_functionName, params...));
+        _queryBind(&m_preparedQuery, params...);
+        m_preparedQuery.exec();
 
-        return m_mapper.map(q);
+        return m_mapper.map(&m_preparedQuery);
     }
 
     template<typename R=T>
     typename std::enable_if<(sizeof...(Arguments) == 0), R>::type
     operator() () {
-        QSqlQuery *q = preparedQuery();
-        if (!q)
-            q = setQuery(_buildQuery(m_functionName));
-        q->exec();
+        if (!m_preparedQuery.isValid())
+            m_preparedQuery.prepare(_buildQuery(m_functionName));
+        m_preparedQuery.exec();
 
-        return m_mapper.map(q);
+        return m_mapper.map(&m_preparedQuery);
     }
 
 private:
+
     QString m_functionName;
     SqlQueryResultMapper<T> m_mapper;
+    QSqlQuery m_preparedQuery;
 };
 
 

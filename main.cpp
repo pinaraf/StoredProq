@@ -12,8 +12,8 @@ int main(int argc, char *argv[])
     QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
     db.setHostName("localhost");
     db.setDatabaseName("test");
-    db.setUserName("moi");
-    db.setPassword("moi");
+    db.setUserName("snoopy");
+    db.setPassword("snoopy");
     bool ok = db.open();
     if (!ok)
         qFatal("Could not open db");
@@ -59,4 +59,8 @@ int main(int argc, char *argv[])
     QJsonDocument doc = QJsonDocument::fromJson("{\"hello\": {\"world\": false, \"me\": true}}");
     SqlBindingMapper<QJsonDocument, QJsonDocument, QString> json_extractor("test_json");
     qDebug() << json_extractor(doc, "{hello}").toJson();
+
+
+    SqlBindingMapper<int, std::tuple<int, int>> summer("sum_me");
+    qDebug() << summer(std::make_tuple(1, 2));
 }

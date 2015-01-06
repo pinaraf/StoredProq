@@ -12,7 +12,7 @@ Example usage
 =============
 
 First step is to connect using QSql (longer term, raw libpq could be used instead)
-```
+```c++
 QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
 db.setHostName("localhost");
 db.setDatabaseName("test");
@@ -20,12 +20,12 @@ bool ok = db.open();
 ```
 
 Then you can declare a stored procedure
-```
+```c++
 SqlBindingMapper<QList<int>, int, int> generateSeries("generate_series");
 ```
 
 And simply call it like any function…
-```
+```c++
 for (int i: generateSeries(1, 10))
     qDebug() << i;
 ```

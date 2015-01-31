@@ -73,7 +73,6 @@ struct placeHolderBuilder
             return QString("?::%1").arg(pg_types<T>::name());
         else
             return QStringLiteral("?");
-        return QStringLiteral("?");
     }
 };
 
@@ -134,6 +133,9 @@ _buildPlaceholders()
     return placeHolderBuilder<T>::build() + ", " + _buildPlaceholders<Args...>();
 }
 
+
+
+
 template<typename... Args>
 inline QString _buildQuery(const QString &functionName)
 {
@@ -150,6 +152,10 @@ inline QString _buildQuery(const QString &functionName)
 {
     return QString("SELECT * FROM %1();").arg(functionName);
 }
+
+
+
+
 
 template <typename T, typename... Arguments>
 class SqlBindingMapper

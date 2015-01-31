@@ -14,14 +14,13 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
-
-SOURCES += main.cpp \
-    operation.cpp
+SOURCES += src/main.cpp \
+    src/operation.cpp
 
 HEADERS += \
-    operation.h \
-    sqlmapper.h \
-    queryresult.h \
-    pg_types.h
-CONFIG += c++11
+    src/operation.h \
+    src/sqlmapper.h \
+    src/queryresult.h \
+    src/pg_types.h
 
+CONFIG += c++11

@@ -6,8 +6,8 @@
 template<typename T>
 struct pg_types
 {
-    static const bool known = false;
-    static const char *name() { return ""; }
+    static constexpr bool known = false;
+    static constexpr const char *name() { return ""; }
     static QString quoteValue (T & value) {
         return QString("?").arg(value);
     }
@@ -16,10 +16,30 @@ struct pg_types
 template<>
 struct pg_types<int>
 {
-    static const bool known = true;
-    static const char *name() { return "integer"; }
+    static constexpr bool known = true;
+    static constexpr const char *name() { return "integer"; }
     static QString quoteValue (int value) {
         return QString::number(value);
+    }
+};
+
+template<>
+struct pg_types<double>
+{
+    static constexpr bool known = true;
+    static constexpr const char *name() { return "double"; }
+    static QString quoteValue (double value) {
+        return QString::number(value);
+    }
+};
+
+template<>
+struct pg_types<QString>
+{
+    static constexpr bool known = true;
+    static constexpr const char *name() { return "text"; }
+    static QString quoteValue (QString value) {
+        return value.replace("'", "''");
     }
 };
 

@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QSqlDatabase>
 #include <QSqlQuery>
+#include <QSqlError>
+#include <QSqlDriver>
 #include <QJsonDocument>
 #include <QVector>
 #include <tuple>
@@ -162,7 +164,8 @@ public:
         if (!m_preparedQuery.isValid())
             m_preparedQuery.prepare(_buildQuery<Arguments...>(m_functionName));
         _queryBind(&m_preparedQuery, params...);
-        m_preparedQuery.exec();
+
+        _exec();
 
         return m_mapper.map(&m_preparedQuery);
     }
@@ -172,12 +175,20 @@ public:
     operator() () {
         if (!m_preparedQuery.isValid())
             m_preparedQuery.prepare(_buildQuery(m_functionName));
-        m_preparedQuery.exec();
+
+        _exec();
 
         return m_mapper.map(&m_preparedQuery);
     }
 
 private:
+
+    inline void _exec() {
+        if (!m_preparedQuery.exec()) {
+            qDebug() << "Got a database failure :" << m_preparedQuery.lastError().text();
+            qFatal("Stopping for database issue");
+        }
+    }
 
     QString m_functionName;
     SqlQueryResultMapper<T> m_mapper;

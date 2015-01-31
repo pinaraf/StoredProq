@@ -7,7 +7,7 @@
 #include <QSqlRecord>
 #include "sqlmapper.h"
 
-int main(int argc, char *argv[])
+int main(int, char *[])
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL");
     db.setHostName("localhost");
@@ -19,6 +19,17 @@ int main(int argc, char *argv[])
         qFatal("Could not open db");
     else
         qDebug() << "DB opened";
+
+    SqlBindingMapper<int, std::tuple<int, QString>> testCard("test_card");
+    int value = testCard(std::make_tuple(1, "test"));
+    qDebug() << value;
+
+
+    SqlBindingMapper<int, QVector<int>, int> array_length("array_length");
+    QVector<int> data;
+    data << 1;
+    data << 2;
+    qDebug() << "Our dims are :" << array_length(data, 1);
 
     Operation *op;
 
@@ -59,8 +70,11 @@ int main(int argc, char *argv[])
     QJsonDocument doc = QJsonDocument::fromJson("{\"hello\": {\"world\": false, \"me\": true}}");
     SqlBindingMapper<QJsonDocument, QJsonDocument, QString> json_extractor("test_json");
     qDebug() << json_extractor(doc, "{hello}").toJson();
-
-
+#if 0
     SqlBindingMapper<int, std::tuple<int, int>> summer("sum_me");
     qDebug() << summer(std::make_tuple(1, 2));
+#endif
+
+
+    return 0;
 }

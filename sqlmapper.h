@@ -5,6 +5,7 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QJsonDocument>
+#include <QVector>
 #include <tuple>
 
 #include "queryresult.h"
@@ -20,6 +21,22 @@ template <>
 inline void _queryBind(QSqlQuery *query, const QJsonDocument &value)
 {
     query->addBindValue(QString::fromUtf8(value.toJson()));
+}
+
+template <typename T>
+inline void _queryBind(QSqlQuery *query, const QVector<T> &value)
+{
+    QString vectorContent = "{";
+    bool first = true;
+    for (auto& v: value) {
+        if (!first)
+            vectorContent.append(",");
+        else
+            first = false;
+        vectorContent.append(pg_types<T>::quoteValue(v));
+    }
+    vectorContent.append("}");
+    query->addBindValue(vectorContent);
 }
 
 template <std::size_t Idx = 0, typename... Args>
@@ -58,12 +75,15 @@ struct placeHolderBuilder
     }
 };
 
-template <>
-struct placeHolderBuilder<int>
+template <typename T>
+struct placeHolderBuilder<QVector<T>>
 {
     static inline QString build ()
     {
-        return QStringLiteral("?::integer");
+        if (pg_types<T>::known)
+            return QString("?::%1[]").arg(pg_types<T>::name());
+        else
+            return QStringLiteral("?");
     }
 };
 

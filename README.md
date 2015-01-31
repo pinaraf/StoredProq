@@ -31,13 +31,15 @@ for (int i: generateSeries(1, 10))
 ```
 
 
+
 Supported datatypes
 ===================
 
 Most data types should be handled immediately : so far, the code does not look at the data types returned by PostgreSQL (and I doubt it's doable with that template-based solution), so it relies on the programmer for the types mapping to be correct.
 
 The basic types (string, integer, double, QDateTime) work.
-More advanced types like QObject using QMetaObject based introspection, QList for functions returnings several lines, std::tuple for both multiple columns return and passing a composite type in function parameter work.
+More advanced types like QObject using QMetaObject based introspection, QList for functions returnings several lines, std::tuple for both multiple columns return and passing a composite type in function parameter work. There is also basic support for mapping a QVector to an array in function parameters.
+
 Being exhaustive, considering the PostgreSQL type collection, is not possible. Instead, it shall be easy to define new mappings if any new type was to be needed with a specific treatment.
 
 

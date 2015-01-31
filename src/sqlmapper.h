@@ -186,14 +186,22 @@ template <typename T, typename... Arguments>
 class SqlBindingMapper
 {
 public:
-    SqlBindingMapper(const QString &functionName) : m_functionName(functionName) {}
+    SqlBindingMapper(const QString &functionName) : SqlBindingMapper(QString::null, functionName) {}
+    SqlBindingMapper(const QString &schemaName, const QString &functionName) : SqlBindingMapper(QSqlDatabase::defaultConnection, schemaName, functionName) {}
+
+    SqlBindingMapper(const char *connectionName, const QString &schemaName, const QString &functionName)
+        : m_schemaName(schemaName),
+          m_functionName(functionName),
+          m_preparedQuery(QSqlDatabase::database(connectionName))
+    {}
+
     ~SqlBindingMapper() { }
 
     template<typename R=T>
     typename std::enable_if<(sizeof...(Arguments) != 0), R>::type
     operator() (Arguments... params) {
         if (!m_preparedQuery.isValid())
-            m_preparedQuery.prepare(_buildQuery<Arguments...>(m_functionName));
+            m_preparedQuery.prepare(_buildQuery<Arguments...>(sqlFunctionName()));
         _queryBind(&m_preparedQuery, params...);
 
         _exec();
@@ -205,11 +213,18 @@ public:
     typename std::enable_if<(sizeof...(Arguments) == 0), R>::type
     operator() () {
         if (!m_preparedQuery.isValid())
-            m_preparedQuery.prepare(_buildQuery(m_functionName));
+            m_preparedQuery.prepare(_buildQuery(sqlFunctionName()));
 
         _exec();
 
         return m_mapper.map(&m_preparedQuery);
+    }
+
+    QString sqlFunctionName() const {
+        if (!m_schemaName.isEmpty())
+            return QString("\"%1\".\"%2\"").arg(m_schemaName).arg(m_functionName);
+        else
+            return QString("\"%1\"").arg(m_functionName);
     }
 
 private:
@@ -221,6 +236,7 @@ private:
         }
     }
 
+    QString m_schemaName;
     QString m_functionName;
     SqlQueryResultMapper<T> m_mapper;
     QSqlQuery m_preparedQuery;

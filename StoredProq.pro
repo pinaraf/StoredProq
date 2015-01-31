@@ -21,6 +21,7 @@ SOURCES += main.cpp \
 HEADERS += \
     operation.h \
     sqlmapper.h \
-    queryresult.h
+    queryresult.h \
+    pg_types.h
 CONFIG += c++11
 

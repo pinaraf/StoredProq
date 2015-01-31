@@ -8,6 +8,7 @@
 #include <tuple>
 
 #include "queryresult.h"
+#include "pg_types.h"
 
 template<typename T>
 inline void _queryBind(QSqlQuery *query, const T &value)
@@ -37,7 +38,6 @@ _queryBind(QSqlQuery *query, const std::tuple<Args...> &value)
     _queryBind<Idx+1>(query, value);
 }
 
-
 template<typename T, typename... Args>
 inline void _queryBind(QSqlQuery *query, T value, Args... args)
 {
@@ -45,12 +45,15 @@ inline void _queryBind(QSqlQuery *query, T value, Args... args)
     _queryBind(query, args...);
 }
 
-
 template <typename T, std::size_t Idx = 0>
 struct placeHolderBuilder
 {
     static inline QString build ()
     {
+        if (pg_types<T>::known)
+            return QString("?::%1").arg(pg_types<T>::name());
+        else
+            return QStringLiteral("?");
         return QStringLiteral("?");
     }
 };

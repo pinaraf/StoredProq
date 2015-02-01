@@ -58,10 +58,9 @@ int main(int, char *[])
     qDebug() << value;
 
     SqlBindingMapper<int, QVector<int>, int> array_length("array_length");
-    QVector<int> data;
-    data << 1;
-    data << 2;
-    qDebug() << "Our dims are :" << array_length(data, 1);
+    QVector<int> data_int;
+    data_int << 1 << 2;
+    qDebug() << "Our dims are :" << array_length(data_int, 1);
 
     Operation *op;
 

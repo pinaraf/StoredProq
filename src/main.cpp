@@ -66,7 +66,14 @@ int main(int, char *[])
 
     SqlBindingMapper<Operation*> mapper("list_all");
     op = mapper();
-    qDebug() << op->description();
+    qDebug() << op->id();
+
+    SqlBindingMapper<std::vector<int>, int, int, int, int, int> build_array("build_array");
+    auto test = build_array(1, 2123, 1233, 1, 15);
+    for (int i: test) {
+        qDebug() << "Got i from array :" << i;
+    }
+
 /*
     SqlBindingMapper<Operation, int> mapper2("list_all");
     op = mapper2(1);
@@ -97,12 +104,12 @@ int main(int, char *[])
     std::tuple<int, int> res = swapper(x, y);
     qDebug() << "x = " << std::get<0>(res) << " ; y = " << std::get<1>(res);
 
-
     QJsonDocument doc = QJsonDocument::fromJson("{\"hello\": {\"world\": false, \"me\": true}}");
     SqlBindingMapper<QJsonDocument, QJsonDocument, QString> json_extractor("test_json");
     qDebug() << json_extractor(doc, "{hello}").toJson();
 
 #if 0
+
     SqlBindingMapper<int, std::tuple<int, int>> summer("sum_me");
     qDebug() << summer(std::make_tuple(1, 2));
 #endif

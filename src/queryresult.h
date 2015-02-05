@@ -37,14 +37,66 @@
 #include <tuple>
 
 template <typename T>
-inline T mapRecordFieldToValue(const QSqlRecord &record, int field)
+struct is_std_vector {
+    static const bool value=false;
+};
+
+template <typename T>
+struct is_std_vector<std::vector<T> > {
+    static const bool value=true;
+};
+
+
+template <typename T>
+inline
+typename std::enable_if<!is_std_vector<T>::value && !std::is_same<T, QJsonDocument>::value, T>::type
+mapRecordFieldToValue(const QSqlRecord &record, int field)
 {
+    qDebug() << "Mapping with generic mapValue";
     return record.value(field).value<T>();
 }
 
-template <>
-inline QJsonDocument mapRecordFieldToValue(const QSqlRecord &record, int field)
+template <typename T>
+inline
+typename std::enable_if<is_std_vector<T>::value, T>::type
+mapRecordFieldToValue(const QSqlRecord &record, int field)
 {
+    qDebug() << "Mapping a field to an array...";
+    T result;
+    QString fieldStringValue = record.value(field).toString();
+    bool inArray = false;
+    int lastItemPosition = -1;
+    for (int i = 0 ; i < fieldStringValue.length() ; i++)
+    {
+        if (fieldStringValue[i] == '{') {
+            inArray = true;
+        } else if (fieldStringValue[i] == '}') {
+            if (lastItemPosition != -1) {
+                result.push_back(QVariant(fieldStringValue.mid(lastItemPosition, i - lastItemPosition)).value<typename T::value_type>());
+                inArray = false;
+                lastItemPosition = -1;
+            }
+        } else if (inArray) {
+            if (fieldStringValue[i] == ',') {
+                if (lastItemPosition != -1) {
+                    result.push_back(QVariant(fieldStringValue.mid(lastItemPosition, i - lastItemPosition)).value<typename T::value_type>());
+                    lastItemPosition = -1;
+                }
+            }
+            else if (lastItemPosition == -1) {
+                lastItemPosition = i;
+            }
+        }
+    }
+    return result;
+}
+
+template <typename T>
+inline
+typename std::enable_if<std::is_same<T, QJsonDocument>::value, T>::type
+mapRecordFieldToValue(const QSqlRecord &record, int field)
+{
+    qDebug() << "Mapping with specialized QJsonDocument mapper";
     return QJsonDocument::fromJson(record.value(field).toString().toUtf8());
 }
 

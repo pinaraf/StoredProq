@@ -118,8 +118,8 @@ struct placeHolderBuilder<std::tuple<Args...>, Idx>
 {
 
     // Non-final element of tuple...
-    template <std::size_t Idx2=Idx>
-    static inline typename std::enable_if<((Idx2 + 1) != sizeof...(Args)), QString>::type
+    template <std::size_t Idx2 = Idx + 1>
+    static inline typename std::enable_if<(Idx2 != sizeof...(Args)), QString>::type
     build ()
     {
         QString base = QString::null;
@@ -132,8 +132,8 @@ struct placeHolderBuilder<std::tuple<Args...>, Idx>
     }
 
     // Final element of tuple...
-    template <std::size_t Idx2=Idx>
-    static inline typename std::enable_if<((Idx2 + 1) == sizeof...(Args)), QString>::type
+    template <std::size_t Idx2 = Idx + 1>
+    static inline typename std::enable_if<(Idx2 == sizeof...(Args)), QString>::type
     build ()
     {
         if (Idx > 0)
@@ -152,7 +152,7 @@ inline QString _buildPlaceholders() {
 
 template<typename T, typename... Args>
 inline
-typename std::enable_if<sizeof...(Args), QString>::type
+typename std::enable_if<sizeof...(Args) != 0, QString>::type
 _buildPlaceholders()
 {
     return placeHolderBuilder<T>::build() + ", " + _buildPlaceholders<Args...>();
